@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { auth, singInWithGooglePopup, logoutUser } from "../lib/firebase";
 import { onAuthStateChanged, User } from "firebase/auth";
-import { Calendar, LogIn, LogOut, User as UserIcon, Sparkles } from "lucide-react";
+import { Calendar, LogIn, LogOut, User as UserIcon, Sparkles, X, ShieldAlert, ExternalLink, HelpCircle, AlertCircle } from "lucide-react";
 
 interface HeaderProps {
   onUserChanged: (user: User | null) => void;
@@ -10,6 +10,8 @@ interface HeaderProps {
 export default function Header({ onUserChanged }: HeaderProps) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const [authError, setAuthError] = useState<string | null>(null);
+  const [showAuthHelpModal, setShowAuthHelpModal] = useState(false);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
@@ -22,9 +24,14 @@ export default function Header({ onUserChanged }: HeaderProps) {
 
   const handleLogin = async () => {
     try {
+      setAuthError(null);
       await singInWithGooglePopup();
-    } catch (e) {
+    } catch (e: any) {
       console.error("Erro ao fazer login:", e);
+      const errorCode = e?.code || "";
+      const errorMsg = e?.message || "";
+      setAuthError(`${errorCode} ${errorMsg ? `(${errorMsg})` : ""}`);
+      setShowAuthHelpModal(true);
     }
   };
 
@@ -114,6 +121,81 @@ export default function Header({ onUserChanged }: HeaderProps) {
         </div>
 
       </div>
+
+      {/* Auth Help Modal when Google Sign-in fails outside AI Studio */}
+      {showAuthHelpModal && (
+        <div className="fixed inset-0 z-[150] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
+          <div className="w-full max-w-lg rounded-2xl border border-gray-150 bg-white p-6 shadow-2xl animate-in fade-in zoom-in duration-150 text-left">
+            <div className="flex items-start justify-between border-b border-gray-100 pb-3 mb-4">
+              <h4 className="text-base font-bold text-gray-800 flex items-center gap-2 font-sans">
+                <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-orange-50 text-orange-600">
+                  <ShieldAlert className="h-4 w-4" />
+                </span>
+                Problemas no Login do Google?
+              </h4>
+              <button 
+                onClick={() => setShowAuthHelpModal(false)}
+                className="rounded-lg p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+            
+            <p className="text-xs text-gray-600 mb-4 leading-relaxed font-semibold">
+              Se a janela de login do Google abriu e fechou imediatamente, ou se você está testando esse aplicativo em uma nova conta de hospedagem (como <strong className="text-gray-850">Vercel</strong> ou <strong className="text-gray-850">GitHub Pages</strong>), o Firebase bloqueia o acesso por motivos de segurança até que o novo endereço seja explicitamente autorizado.
+            </p>
+
+            <div className="rounded-xl bg-blue-50/70 border border-blue-100 p-4 mb-4">
+              <h5 className="text-xxs font-bold text-blue-800 uppercase tracking-widest mb-2 font-mono flex items-center gap-1.5">
+                <HelpCircle className="h-3.5 w-3.5 text-blue-600" />
+                COMO RESOLVER NO SEU FIREBASE (PASSO A PASSO):
+              </h5>
+              <ol className="text-xs text-gray-700 space-y-2.5 list-decimal list-inside font-medium">
+                <li>
+                  Acesse o <a href="https://console.firebase.google.com/" target="_blank" rel="noopener noreferrer" className="text-blue-600 font-bold hover:underline inline-flex items-center gap-0.5">
+                    Console do Firebase <ExternalLink className="h-3 w-3" />
+                  </a> e clique no projeto do seu aplicativo.
+                </li>
+                <li>
+                  No menu lateral, vá em <strong className="text-gray-850">Authentication (Autenticação)</strong>.
+                </li>
+                <li>
+                  Clique na aba <strong className="text-gray-850">Settings (Configurações)</strong> na parte superior e depois selecione <strong className="text-gray-850">Authorized domains (Domínios autorizados)</strong> no painel.
+                </li>
+                <li>
+                  Clique em <strong className="text-indigo-600">Add domain (Adicionar domínio)</strong> e adicione o endereço do seu site Vercel (ex: <code className="bg-white/80 px-1 border rounded text-xs font-mono select-all">sua-escala.vercel.app</code>) ou seu domínio atual.
+                </li>
+              </ol>
+            </div>
+
+            {authError && (
+              <div className="rounded-lg bg-gray-50 border border-gray-150 p-2.5 mb-4 text-[11px] font-mono text-gray-500 overflow-x-auto whitespace-pre-wrap max-h-24">
+                <span className="font-bold text-gray-750 block mb-0.5">Código Técnico do Erro:</span>
+                {authError}
+              </div>
+            )}
+
+            <div className="flex items-center justify-end gap-2.5 border-t border-gray-100 pt-3">
+              <a
+                href="https://console.firebase.google.com/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="rounded-xl border border-gray-200 bg-white px-4 py-2 text-xs font-bold text-gray-600 hover:bg-gray-50 transition flex items-center gap-1.5"
+              >
+                <span>Console do Firebase</span>
+                <ExternalLink className="h-3.5 w-3.5" />
+              </a>
+              <button
+                onClick={() => setShowAuthHelpModal(false)}
+                className="rounded-xl bg-blue-600 text-white px-4.5 py-2 text-xs font-bold hover:bg-blue-700 transition cursor-pointer shadow-md"
+              >
+                Fechar Ajuda
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
     </header>
   );
 }
