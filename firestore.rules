@@ -1,0 +1,47 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // 1. Global Safety Net: Default Deny All
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Helper: Valid ID Format
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    // Helper: Signed In check
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    // Helper: Validate incoming Escala payload
+    function isValidEscala(data) {
+      return data.userId == request.auth.uid
+        && data.nomeEscala is string && data.nomeEscala.size() > 0 && data.nomeEscala.size() <= 150
+        && data.tipoEscala is string && data.tipoEscala.size() > 0 && data.tipoEscala.size() <= 50
+        && data.horasTrabalho is number && data.horasTrabalho >= 0 && data.horasTrabalho <= 168
+        && data.horasFolga is number && data.horasFolga >= 0 && data.horasFolga <= 168
+        && data.dataBase is string && data.dataBase.size() == 10
+        && data.statusDataBase is string && (data.statusDataBase == 'trabalhando' || data.statusDataBase == 'folga');
+    }
+
+    // 2. Escalas Collection Security Rules
+    match /escalas/{escalaId} {
+      allow read: if isSignedIn() && resource.data.userId == request.auth.uid;
+      
+      allow create: if isSignedIn() 
+        && isValidId(escalaId)
+        && isValidEscala(request.resource.data);
+        
+      allow update: if isSignedIn()
+        && resource.data.userId == request.auth.uid
+        && request.resource.data.userId == request.auth.uid
+        && isValidEscala(request.resource.data);
+        
+      allow delete: if isSignedIn()
+        && resource.data.userId == request.auth.uid;
+    }
+  }
+}

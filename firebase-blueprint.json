@@ -1,0 +1,74 @@
+{
+  "entities": {
+    "Escala": {
+      "title": "Escala",
+      "description": "Escala de plantão de um profissional",
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "string",
+          "description": "ID do usuário no Firebase Auth"
+        },
+        "nomeEscala": {
+          "type": "string",
+          "description": "Nome personalizado da escala, ex: Escala Hospital"
+        },
+        "tipoEscala": {
+          "type": "string",
+          "description": "Regras de revezamento: 12x36, 24x48, 24x72 ou personalizada"
+        },
+        "horasTrabalho": {
+          "type": "number",
+          "description": "Duração do plantão em horas"
+        },
+        "horasFolga": {
+          "type": "number",
+          "description": "Duração do repouso em horas"
+        },
+        "dataBase": {
+          "type": "string",
+          "description": "Data base de referência (YYYY-MM-DD)"
+        },
+        "statusDataBase": {
+          "type": "string",
+          "description": "Indica se na data-base o status é 'trabalhando' ou 'folga'"
+        },
+        "horarioInicio": {
+          "type": "string",
+          "description": "Horário de início, ex: 07:00"
+        },
+        "horarioFim": {
+          "type": "string",
+          "description": "Horário de término, ex: 19:00"
+        },
+        "excecoes": {
+          "type": "object",
+          "description": "Mapa de datas com marcações manuais de trocas, férias, atestados ou folgas customizadas"
+        },
+        "criadoEm": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "atualizadoEm": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "userId",
+        "nomeEscala",
+        "tipoEscala",
+        "horasTrabalho",
+        "horasFolga",
+        "dataBase",
+        "statusDataBase"
+      ]
+    }
+  },
+  "firestore": {
+    "/escalas/{escalaId}": {
+      "schema": "Escala",
+      "description": "Armazena as escalas dos usuários, protegidas por autenticação"
+    }
+  }
+}

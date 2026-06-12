@@ -1,0 +1,6 @@
+{
+  "name": "Minha Escala",
+  "description": "Gerenciador automático e inteligente de escalas e plantões (12x36, 24x48, 24x72 e personalizadas) com calendário anual e consultas por data.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
